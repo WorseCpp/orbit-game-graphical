@@ -51,7 +51,7 @@ template<HasAttribPointer T>
 class DynVBO {
 public:
     DynVBO(int arr_size)
-    : m_arr_size(arr_size)
+    : m_arr_size(arr_size+1)
     {
         glGenBuffers(1, &id);
         glBindBuffer(GL_ARRAY_BUFFER, id);
@@ -62,7 +62,21 @@ public:
 
     ~DynVBO(){ glDeleteBuffers(1, &id); }
 
-    void loadData(T* data, GLsizeiptr arr_size, GLsizeiptr idx = 0){
+    void loadData(const std::vector<T>& data, GLsizeiptr idx = 0){
+        if (data.empty()) {
+            std::cerr << "Error: Attempting to load empty data into VBO." << std::endl;
+            return;
+        }
+        if (data.size() >= m_arr_size) {
+            std::cerr << "Error: Data size exceeds VBO capacity." << std::endl;
+            return;
+        }
+        
+        
+        loadData(data.data(), data.size(), idx);
+    }
+
+    void loadData(const T* data, GLsizeiptr arr_size, GLsizeiptr idx = 0){
         bind();
 
         if (idx < 0 || idx >= m_arr_size) {

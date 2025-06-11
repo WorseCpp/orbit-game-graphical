@@ -1,8 +1,6 @@
-# Makefile for orb-game
-
 # Compiler and flags
 CXX := g++
-CXXFLAGS := -Wall -Wextra -std=c++23 -O3
+CXXFLAGS := -Wall -Wextra -std=c++23 -O3 -Iinc
 
 # Source files and target
 SRCS := $(wildcard src/*.cpp)

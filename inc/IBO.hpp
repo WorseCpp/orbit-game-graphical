@@ -42,7 +42,7 @@ class DynIBO {
 public:
     // Constructs a dynamic index buffer with allocated space for 'count' indices.
     DynIBO(unsigned int count)
-        : m_Count(count)
+        : m_Count(count + 1)
     {
         glGenBuffers(1, &m_ID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
@@ -70,6 +70,20 @@ public:
         bind();
         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset * sizeof(unsigned int), count * sizeof(unsigned int), indices);
         unbind();
+    }
+
+    void loadData(const std::vector<unsigned int>& data, GLsizeiptr idx = 0){
+        if (data.empty()) {
+            std::cerr << "Error: Attempting to load empty data into VBO." << std::endl;
+            return;
+        }
+        if (data.size() >= m_Count) {
+            std::cerr << "Error: Data size exceeds VBO capacity." << std::endl;
+            return;
+        }
+        
+        
+        loadData(data.data(), data.size(), idx);
     }
 
     // Returns the maximum number of indices the buffer can hold.
