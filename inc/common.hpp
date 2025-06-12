@@ -7,6 +7,10 @@
 #include <memory>
 #include <glm/glm.hpp>
 
+#include <utility>
+
+const float PI = 3.14159265f;
+
 #endif
 
 #define COMMON_HPP
