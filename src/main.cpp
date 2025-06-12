@@ -71,7 +71,7 @@ int main() {
 
     std::vector<unsigned int> indices;
 
-    std::tie(vertices, indices) = createSphere(1.0f, 0, PI / 2);
+    std::tie(vertices, indices) = createSphere(10.0f, 0, -PI / 2, 30, 30);
 
     std::shared_ptr<Camera> camera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f);
 
@@ -97,7 +97,7 @@ int main() {
     
     simple_tex_shad.bind();
 
-    Texture earth_texture("./earthmap1k.jpg");
+    Texture earth_texture("./8081_earthmap10k.jpg");
     
    
 
