@@ -67,11 +67,11 @@ int main() {
     //282 463
 
     // Vertex data using std::vector
-    std::vector<SFloat3T2> vertices;
+    std::vector<P_N_C> vertices;
 
     std::vector<unsigned int> indices;
 
-    std::tie(vertices, indices) = createSphere(10.0f, 0, -PI / 2, 30, 30);
+    std::tie(vertices, indices) = createSpherePNC(10.0f, 0, -PI / 2, 30, 30);
 
     std::shared_ptr<Camera> camera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f);
 
@@ -81,7 +81,7 @@ int main() {
     VAO vao;
     vao.bind();
 
-    DynVBO<SFloat3T2> dyn_vbo = DynVBO<SFloat3T2>(vertices.size());
+    DynVBO<P_N_C> dyn_vbo = DynVBO<P_N_C>(vertices.size());
 
     dyn_vbo.bind();
     dyn_vbo.loadData(vertices);
@@ -93,11 +93,11 @@ int main() {
     dyn_ibo.loadData(indices);
     dyn_ibo.unbind();
 
-    Shader simple_tex_shad = Shader("./shad/simple_tex");
+    Shader simple_shad = Shader("./shad/PNC_simple");
     
-    simple_tex_shad.bind();
+    simple_shad.bind();
 
-    Texture earth_texture("./8081_earthmap10k.jpg");
+    //Texture earth_texture("./8081_earthmap10k.jpg");
     
    
 
@@ -120,11 +120,12 @@ int main() {
     });
 
     // Bind the texture to the uniform
-    simple_tex_shad.bind();
-    earth_texture.bind();
-    simple_tex_shad.setInt("ourTexture", 0);
+    //simple_tex_shad.bind();
+    //earth_texture.bind();
+    //simple_tex_shad.setInt("ourTexture", 0);
 
     // Render loop
+    float theta = 0.0;
     while (!glfwWindowShouldClose(window)) {
 
         glm::mat4 model = glm::mat4(1.0f);
@@ -133,7 +134,10 @@ int main() {
    
 
         glm::mat4 MVP = projection * view * model;
-        simple_tex_shad.setMat4f("MVP", &MVP[0][0]);
+        theta += .01;
+        simple_shad.setMat4f("MVP", &MVP[0][0]);
+        simple_shad.setFloat("theta", theta);
+        
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

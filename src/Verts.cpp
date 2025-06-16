@@ -36,3 +36,27 @@ SFloat3T2::SFloat3T2()
     u = 0.0f;
     v = 0.0f;
 }
+
+void P_N_C::setAttribPointer()
+{
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(P_N_C), (const void*)offsetof(P_N_C, pos));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(P_N_C), (const void*)offsetof(P_N_C, norm));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(P_N_C), (const void*)offsetof(P_N_C, color));
+    glEnableVertexAttribArray(2);
+}
+
+P_N_C::P_N_C(const glm::vec3& p, const glm::vec3& n, const glm::vec3& c)
+{
+    pos = p;
+
+    assert(glm::length(n) > 1e-6);
+
+    norm = glm::normalize(n);
+
+    color = c;
+}
+
+P_N_C::P_N_C()
+{}

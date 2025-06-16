@@ -4,6 +4,8 @@
 #include <vector>
 #include <cstddef>
 
+#include "glm/glm.hpp"
+
 // Triangle class
 class SFloat3{
     public:
@@ -26,6 +28,17 @@ class SFloat3T2{
         SFloat3T2();
 };
 
+class P_N_C {
+public:
+    void setAttribPointer();
+
+    glm::vec3 pos;
+    glm::vec3 norm;
+    glm::vec3 color;
+
+    P_N_C(const glm::vec3& p, const glm::vec3& n, const glm::vec3& c);
+    P_N_C();
+};
 
 
 #endif // RENDERABLE_VERTICES_H
