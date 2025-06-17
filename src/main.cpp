@@ -18,6 +18,8 @@
 
 #include "Geom.hpp"
 
+#include "ProcGen.hpp"
+
 // VAO class
 class VAO {
 public:
@@ -71,7 +73,7 @@ int main() {
 
     std::vector<unsigned int> indices;
 
-    std::tie(vertices, indices) = createSpherePNC(10.0f, 0, -PI / 2, 30, 30);
+    std::tie(vertices, indices) = PlanetArray(32, 32).mesh<P_N_C>();
 
     std::shared_ptr<Camera> camera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f);
 
@@ -134,7 +136,7 @@ int main() {
    
 
         glm::mat4 MVP = projection * view * model;
-        theta += .01;
+        theta += .01 * 10;
         simple_shad.setMat4f("MVP", &MVP[0][0]);
         simple_shad.setFloat("theta", theta);
         

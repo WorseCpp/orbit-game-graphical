@@ -6,6 +6,15 @@
 
 #include "glm/glm.hpp"
 
+#include <type_traits>
+
+#include <concepts>
+
+template<typename T>
+concept HasAttribPointer = requires(T t) {
+    { t.setAttribPointer() } -> std::same_as<void>;
+};
+
 // Triangle class
 class SFloat3{
     public:

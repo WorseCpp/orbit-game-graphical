@@ -5,14 +5,7 @@
 #include <GLFW/glfw3.h>
 #include "common.hpp"
 
-#include <type_traits>
-
-#include <concepts>
-
-template<typename T>
-concept HasAttribPointer = requires(T t) {
-    { t.setAttribPointer() } -> std::same_as<void>;
-};
+#include "Verts.hpp"
 
 template<HasAttribPointer T>
 class VBO {
