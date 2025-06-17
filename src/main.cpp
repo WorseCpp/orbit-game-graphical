@@ -61,19 +61,24 @@ int main() {
     }
 
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    glDisable(GL_CULL_FACE);
+    //glCullFace(GL_BACK);
     glDebugMessageCallback(err_callback, nullptr);
 
 
     //282 463
+
 
     // Vertex data using std::vector
     std::vector<P_N_C> vertices;
 
     std::vector<unsigned int> indices;
 
-    std::tie(vertices, indices) = PlanetArray(32, 32).mesh<P_N_C>();
+    auto planet = PlanetArray(32, 32);
+    
+    planet.perlin(10.);
+
+    std::tie(vertices, indices) = planet.mesh<P_N_C>();
 
     std::shared_ptr<Camera> camera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f);
 
@@ -136,7 +141,7 @@ int main() {
    
 
         glm::mat4 MVP = projection * view * model;
-        theta += .01 * 10;
+        // theta += .01 * 10;
         simple_shad.setMat4f("MVP", &MVP[0][0]);
         simple_shad.setFloat("theta", theta);
         
@@ -147,6 +152,7 @@ int main() {
         vao.bind();
         dyn_vbo.bind();
         dyn_ibo.bind();
+
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
 
         glfwSwapBuffers(window);

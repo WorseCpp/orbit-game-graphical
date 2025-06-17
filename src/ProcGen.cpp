@@ -1,11 +1,25 @@
 #include "ProcGen.hpp"
 
+#include "Perlin.hpp"
+
 // Constructor: initialize with a given capacity.
 PlanetArray::PlanetArray(size_t inTheta, size_t inPhi)
 {
     nTheta = (inTheta);
     nPhi = (inPhi);
     data = std::vector<std::vector<double>>(nTheta, std::vector<double>(nPhi, 1.0));
+}
+
+void PlanetArray::perlin(double rad)
+{
+    nominal_rad = rad;
+    PerlinNoise p = PerlinNoise(mt_gen(), nTheta / 2, nPhi / 2);
+
+    for (size_t i = 0; i < nTheta; ++i) {
+        for (size_t j = 0; j < nPhi; ++j) {
+            data[i][j] = p.noise(i / 2 + .5, j / 2 + .5) + nominal_rad;
+        }
+    }
 }
 
 // Access element using angular coordinates in radians.
@@ -79,8 +93,6 @@ std::pair<std::vector<SFloat3>, std::vector<unsigned int>> PlanetArray::mesh<SFl
     // For example:
     // vertices.push_back({ x, y, z });
     // indices.push_back(0);
-
-    
 
     return {vertices, indices};
 }
@@ -171,15 +183,28 @@ std::pair<std::vector<P_N_C>, std::vector<unsigned int>> PlanetArray::mesh<P_N_C
             double ny = (len != 0.0) ? y / len : 0.0;
             double nz = (len != 0.0) ? z / len : 0.0;
 
+            double height_above_nom = r - nominal_rad;
+
+            glm::vec3 col = glm::vec3(.3, .3, .3);
+
+            if (height_above_nom > .5)
+            {
+                col = glm::vec3(1.0);
+            }
+
+            if (height_above_nom < -.5)
+            {
+                col = glm::vec3(0., 0., 1.);
+            }
+
             // Derive a simple color from height.
-            float fColor = static_cast<float>(r);
 
             // Assuming P_N_C is defined as {float x, y, z, nx, ny, nz, r, g, b},
             // push the vertex.
             vertices.push_back({
                 glm::vec3(static_cast<float>(x), static_cast<float>(y), static_cast<float>(z)),
                 glm::vec3(static_cast<float>(nx), static_cast<float>(ny), static_cast<float>(nz)),
-                glm::vec3(fColor, fColor, fColor)
+                col
             });
         }
     }

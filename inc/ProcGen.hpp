@@ -21,9 +21,12 @@ public:
     template <HasAttribPointer T>
     std::pair<std::vector<T>, std::vector<unsigned int>> mesh();
 
+    void perlin(double rad);
+
 private:
     size_t nTheta, nPhi;
     std::vector<std::vector<double>> data;
+    double nominal_rad;
 
     // Converts an angle value to an index in the range [0, divisions-1].
     static size_t angleToIndex(double angle, double minAngle, double maxAngle, size_t divisions);
