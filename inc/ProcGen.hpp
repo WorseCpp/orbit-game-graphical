@@ -10,7 +10,7 @@
 class PlanetArray {
 public:
     // Constructs a planet grid with nTheta rows (from 0 to pi) and nPhi columns (from 0 to 2pi)
-    PlanetArray(size_t nTheta, size_t nPhi);
+    PlanetArray(size_t nTheta, size_t nPhi, double rad);
 
     // Access element using angular coordinates in radians.
     // theta should be in [0, pi] and phi in [0, 2*pi).
@@ -21,7 +21,7 @@ public:
     template <HasAttribPointer T>
     std::pair<std::vector<T>, std::vector<unsigned int>> mesh();
 
-    void perlin(double rad);
+    void fractal(double decay, double epoch, double scale);
 
 private:
     size_t nTheta, nPhi;

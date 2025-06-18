@@ -3,23 +3,41 @@
 #include "Perlin.hpp"
 
 // Constructor: initialize with a given capacity.
-PlanetArray::PlanetArray(size_t inTheta, size_t inPhi)
+PlanetArray::PlanetArray(size_t inTheta, size_t inPhi, double rad)
 {
     nTheta = (inTheta);
     nPhi = (inPhi);
-    data = std::vector<std::vector<double>>(nTheta, std::vector<double>(nPhi, 1.0));
+    nominal_rad = rad;
+    data = std::vector<std::vector<double>>(nTheta, std::vector<double>(nPhi, rad));
 }
 
-void PlanetArray::perlin(double rad)
+void PlanetArray::fractal(double decay, double epoch, double scale)
 {
-    nominal_rad = rad;
-    PerlinNoise p = PerlinNoise(mt_gen(), nTheta / 2, nPhi / 2);
+    float amp_const = 1.0;
+
+    for (; epoch > 0; epoch --)
+    {
+        PerlinNoise p = PerlinNoise(mt_gen(), nTheta / scale, nPhi / scale);
+        for (size_t i = 0; i < nTheta; ++i) {
+            for (size_t j = 0; j < nPhi; ++j) {
+                data[i][j] += p.noise(i / scale + .5, j / scale + .5) * amp_const + nominal_rad;
+            }
+        }
+        amp_const *= decay;
+        scale *= 2.;
+    }
+
+    double n = 0.;
 
     for (size_t i = 0; i < nTheta; ++i) {
         for (size_t j = 0; j < nPhi; ++j) {
-            data[i][j] = p.noise(i / 2 + .5, j / 2 + .5) + nominal_rad;
+            n += data[i][j];
         }
     }
+
+    n /= (nTheta * nPhi);
+
+    nominal_rad = n;
 }
 
 // Access element using angular coordinates in radians.
@@ -185,14 +203,19 @@ std::pair<std::vector<P_N_C>, std::vector<unsigned int>> PlanetArray::mesh<P_N_C
 
             double height_above_nom = r - nominal_rad;
 
-            glm::vec3 col = glm::vec3(.3, .3, .3);
+            glm::vec3 col = glm::vec3(0.0, 1., 0.);
 
             if (height_above_nom > .5)
+            {
+                col = glm::vec3(.3f);
+            }
+
+            if (height_above_nom > .9)
             {
                 col = glm::vec3(1.0);
             }
 
-            if (height_above_nom < -.5)
+            if (height_above_nom < .1)
             {
                 col = glm::vec3(0., 0., 1.);
             }

@@ -74,13 +74,13 @@ int main() {
 
     std::vector<unsigned int> indices;
 
-    auto planet = PlanetArray(32, 32);
+    auto planet = PlanetArray(1024, 1024, 10.);
     
-    planet.perlin(10.);
+    planet.fractal(.5, 5, 32.);
 
     std::tie(vertices, indices) = planet.mesh<P_N_C>();
 
-    std::shared_ptr<Camera> camera = std::make_shared<Camera>(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f);
+    std::shared_ptr<Camera> camera = std::make_shared<Camera>(glm::vec3(20.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), 90.0f, 0.0f);
 
     InputHandler inputHandler(camera);
 
@@ -141,7 +141,7 @@ int main() {
    
 
         glm::mat4 MVP = projection * view * model;
-        // theta += .01 * 10;
+        theta += .01 * 10;
         simple_shad.setMat4f("MVP", &MVP[0][0]);
         simple_shad.setFloat("theta", theta);
         
