@@ -23,10 +23,18 @@ public:
             x = fmodf(x, float(repeatX_));
             if (x < 0) x += repeatX_;
         }
+
         if (repeatY_ > 0) {
             y = fmodf(y, float(repeatY_));
             if (y < 0) y += repeatY_;
         }
+
+        x /= (repeatX_);
+        y /= (repeatY_);
+
+        x *= 256;
+        y *= 256;
+
 
         int xi = static_cast<int>(floorf(x)) & 255;
         int yi = static_cast<int>(floorf(y)) & 255;

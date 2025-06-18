@@ -11,33 +11,35 @@ PlanetArray::PlanetArray(size_t inTheta, size_t inPhi, double rad)
     data = std::vector<std::vector<double>>(nTheta, std::vector<double>(nPhi, rad));
 }
 
-void PlanetArray::fractal(double decay, double epoch, double scale)
+void PlanetArray::fractal()
 {
-    float amp_const = 1.0;
+    double amplitude = 1.0;
+    double frequency = 1. / 512.;
+    double lacunarity = 2;
+    double scale0 = .5;
+    
+    for (size_t n = 0; n < 10; n++) {
+        // Set periods to nTheta*frequency and nPhi*frequency for seamless tiling
+        auto p = PerlinNoise(mt_gen(), nTheta * frequency, nPhi * frequency);
+    
+        for (size_t i = 0; i < nTheta; i++) {
+            
+            float x = static_cast<float>(i) * frequency + 0.5f;
 
-    for (; epoch > 0; epoch --)
-    {
-        PerlinNoise p = PerlinNoise(mt_gen(), nTheta / scale, nPhi / scale);
-        for (size_t i = 0; i < nTheta; ++i) {
-            for (size_t j = 0; j < nPhi; ++j) {
-                data[i][j] += p.noise(i / scale + .5, j / scale + .5) * amp_const + nominal_rad;
+            for (size_t j = 0; j < nPhi; j++) {
+
+                // Map i and j directly to [0, period)
+                float y = static_cast<float>(j) * frequency + 0.5f;
+    
+                float noise_val = scale0 * p.noise(x, y);
+
+                data[i][j] += noise_val * amplitude;
             }
         }
-        amp_const *= decay;
-        scale *= 2.;
+    
+        frequency *= lacunarity;
+        amplitude /= lacunarity;
     }
-
-    double n = 0.;
-
-    for (size_t i = 0; i < nTheta; ++i) {
-        for (size_t j = 0; j < nPhi; ++j) {
-            n += data[i][j];
-        }
-    }
-
-    n /= (nTheta * nPhi);
-
-    nominal_rad = n;
 }
 
 // Access element using angular coordinates in radians.
@@ -181,6 +183,9 @@ std::pair<std::vector<P_N_C>, std::vector<unsigned int>> PlanetArray::mesh<P_N_C
 
     // Generate vertices.
     // Loop over the angular grid.
+
+    PerlinNoise col_noise = PerlinNoise(mt_gen(), 32, 32);
+
     for (size_t i = 0; i < nTheta; ++i) {
         // theta goes from 0 to pi.
         double theta = M_PI * static_cast<double>(i) / (nTheta - 1);
@@ -201,26 +206,93 @@ std::pair<std::vector<P_N_C>, std::vector<unsigned int>> PlanetArray::mesh<P_N_C
             double ny = (len != 0.0) ? y / len : 0.0;
             double nz = (len != 0.0) ? z / len : 0.0;
 
+            // Biome colors with natural variations
+            glm::vec3 col;
             double height_above_nom = r - nominal_rad;
 
-            glm::vec3 col = glm::vec3(0.0, 1., 0.);
+            double u = 32 * (i / (double) nTheta) + .5;
+            double v = 32 * (j / (double) nPhi)   + .5;
 
-            if (height_above_nom > .5)
-            {
-                col = glm::vec3(.3f);
+            // Define biome thresholds (adjust based on your height distribution)
+            const float DEEP_OCEAN = -0.f;
+            const float SHALLOW_OCEAN = 0.2f;
+            const float BEACH = 0.30f;
+            const float GRASSLAND = 0.40f;
+            const float FOREST = 0.55f;
+            const float MOUNTAIN_BASE = 0.65f;
+            const float SNOW_LINE = 0.75f;
+
+            // Ocean biomes
+            if (height_above_nom < DEEP_OCEAN) {
+                col = glm::vec3(0.0f, 0.1f, 0.3f);  // Deep ocean
+            } else if (height_above_nom < SHALLOW_OCEAN) {
+                float t = (height_above_nom - DEEP_OCEAN) / (SHALLOW_OCEAN - DEEP_OCEAN);
+                col = glm::mix(glm::vec3(0.0f, 0.1f, 0.3f), glm::vec3(0.2f, 0.5f, 0.9f), t);
+            } 
+            // Coastal biomes
+            else if (height_above_nom < BEACH) {
+                col = glm::vec3(0.96f, 0.96f, 0.7f);  // Sandy beach
+            } 
+            // Lowland biomes
+            else if (height_above_nom < GRASSLAND) {
+                // Add grassland variation using noise
+                float noise = col_noise.noise(u, v) * 0.05f;
+                col = glm::vec3(0.1f + noise, 0.7f + noise, 0.2f);
+            } 
+            // Mid-elevation biomes
+            else if (height_above_nom < FOREST) {
+                // Forest with natural color variation
+                float noise = col_noise.noise(u, v) * 0.02f;
+                col = glm::vec3(0.0f, 0.3f + noise, 0.05f);
+            } 
+            // Highland biomes
+            else if (height_above_nom < MOUNTAIN_BASE) {
+                // Rocky mountains with stratification
+                float rock_variation = col_noise.noise(u, v) * 0.03f;
+                col = glm::vec3(0.4f + rock_variation, 0.4f + rock_variation, 0.4f);
+            } 
+            // Alpine biomes
+            else if (height_above_nom < SNOW_LINE) {
+                float t = (height_above_nom - MOUNTAIN_BASE) / (SNOW_LINE - MOUNTAIN_BASE);
+                glm::vec3 rock(0.5f, 0.5f, 0.5f);
+                glm::vec3 snow(1.0f, 1.0f, 1.0f);
+                col = glm::mix(rock, snow, t * 1.5f);  // Accelerated transition
+            } 
+            // Snow caps
+            else {
+                col = glm::vec3(1.0f, 1.0f, 1.0f);  // Pure snow
             }
 
-            if (height_above_nom > .9)
-            {
-                col = glm::vec3(1.0);
+            
+            // Parameters
+            float polar_band = 0.18f;   // Fraction of planet covered by polar ice at each pole (center of band)
+            float polar_fade = 0.10f;   // Fraction for smooth transition/fade
+            float noise_scale = 1.0f;   // Controls size of ice "fingers"
+            float noise_strength = 0.01f; // How much the boundary "wiggles" (fraction of planet)
+
+            // Normalized latitude: 0 at south pole, 1 at north pole
+            float latitude = float(i) / float(nTheta - 1);
+            float to_pole = std::min(latitude, 1.0f - latitude);
+
+            // 1D Perlin noise based on phi (longitude)
+            float phi_norm = float(j) / float(nPhi); // [0,1]
+            float noise = col_noise.noise(phi_norm * 32. + .5, .5); // [-1,1] or [0,1] depending on your noise implementation
+
+            // Offset the polar band with noise
+            float polar_band_noisy = polar_band + noise * noise_strength;
+
+            // Compute smooth polar mask (1.0 = full ice, 0.0 = no ice)
+            float polar_mask = 0.0f;
+            if (to_pole < polar_band_noisy) {
+                float edge = polar_band_noisy - polar_fade;
+                if (to_pole < edge) {
+                    polar_mask = 1.0f;
+                }
             }
 
-            if (height_above_nom < .1)
-            {
-                col = glm::vec3(0., 0., 1.);
-            }
-
-            // Derive a simple color from height.
+            // Blend polar ice color with biome color
+            glm::vec3 polar_ice_color(0.8f, 0.92f, 1.0f);
+            col = glm::mix(col, polar_ice_color, polar_mask);
 
             // Assuming P_N_C is defined as {float x, y, z, nx, ny, nz, r, g, b},
             // push the vertex.

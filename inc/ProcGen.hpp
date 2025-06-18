@@ -21,7 +21,7 @@ public:
     template <HasAttribPointer T>
     std::pair<std::vector<T>, std::vector<unsigned int>> mesh();
 
-    void fractal(double decay, double epoch, double scale);
+    void fractal();
 
 private:
     size_t nTheta, nPhi;
