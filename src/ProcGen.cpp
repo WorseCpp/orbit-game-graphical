@@ -267,8 +267,7 @@ std::pair<std::vector<P_N_C>, std::vector<unsigned int>> PlanetArray::mesh<P_N_C
             // Parameters
             float polar_band = 0.18f;   // Fraction of planet covered by polar ice at each pole (center of band)
             float polar_fade = 0.10f;   // Fraction for smooth transition/fade
-            float noise_scale = 1.0f;   // Controls size of ice "fingers"
-            float noise_strength = 0.01f; // How much the boundary "wiggles" (fraction of planet)
+            float noise_strength = 0.008f; // How much the boundary "wiggles" (fraction of planet)
 
             // Normalized latitude: 0 at south pole, 1 at north pole
             float latitude = float(i) / float(nTheta - 1);
