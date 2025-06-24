@@ -13,32 +13,14 @@ PlanetArray::PlanetArray(size_t inTheta, size_t inPhi, double rad)
 
 void PlanetArray::fractal()
 {
-    double amplitude = 1.0;
-    double frequency = 1. / 512.;
-    double lacunarity = 2;
-    double scale0 = .5;
-    
-    for (size_t n = 0; n < 10; n++) {
-        // Set periods to nTheta*frequency and nPhi*frequency for seamless tiling
-        auto p = PerlinNoise(mt_gen(), nTheta * frequency, nPhi * frequency);
-    
-        for (size_t i = 0; i < nTheta; i++) {
-            
-            float x = static_cast<float>(i) * frequency + 0.5f;
 
-            for (size_t j = 0; j < nPhi; j++) {
+    FractalNoise f = FractalNoise(mt_gen(), nTheta, nPhi, 2. / nTheta);
 
-                // Map i and j directly to [0, period)
-                float y = static_cast<float>(j) * frequency + 0.5f;
-    
-                float noise_val = scale0 * p.noise(x, y);
 
-                data[i][j] += noise_val * amplitude;
-            }
+    for (size_t i = 0; i < nTheta; i++) {
+        for (size_t j = 0; j < nPhi; j++) {
+            data[i][j] += f.noise(i, j);
         }
-    
-        frequency *= lacunarity;
-        amplitude /= lacunarity;
     }
 }
 
@@ -184,7 +166,7 @@ std::pair<std::vector<P_N_C>, std::vector<unsigned int>> PlanetArray::mesh<P_N_C
     // Generate vertices.
     // Loop over the angular grid.
 
-    PerlinNoise col_noise = PerlinNoise(mt_gen(), 32, 32);
+    FractalNoise col_noise = FractalNoise(mt_gen(), nTheta, nTheta, 2. / nTheta);
 
     for (size_t i = 0; i < nTheta; ++i) {
         // theta goes from 0 to pi.
@@ -267,15 +249,15 @@ std::pair<std::vector<P_N_C>, std::vector<unsigned int>> PlanetArray::mesh<P_N_C
             // Parameters
             float polar_band = 0.18f;   // Fraction of planet covered by polar ice at each pole (center of band)
             float polar_fade = 0.10f;   // Fraction for smooth transition/fade
-            float noise_strength = 0.008f; // How much the boundary "wiggles" (fraction of planet)
+            float noise_strength = 0.1f; // How much the boundary "wiggles" (fraction of planet)
 
             // Normalized latitude: 0 at south pole, 1 at north pole
             float latitude = float(i) / float(nTheta - 1);
             float to_pole = std::min(latitude, 1.0f - latitude);
 
             // 1D Perlin noise based on phi (longitude)
-            float phi_norm = float(j) / float(nPhi); // [0,1]
-            float noise = col_noise.noise(phi_norm * 32. + .5, .5); // [-1,1] or [0,1] depending on your noise implementation
+            // float phi_norm = float(j) / float(nPhi); // [0,1]
+            float noise = col_noise.noise(j + .5, .5); // [-1,1] or [0,1] depending on your noise implementation
 
             // Offset the polar band with noise
             float polar_band_noisy = polar_band + noise * noise_strength;

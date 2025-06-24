@@ -80,4 +80,54 @@ private:
     }
 };
 
+class FractalNoise {
+    public:
+        FractalNoise(unsigned long seed, int nTheta, int nPhi,
+                    double initial_freq, int octaves = 10, 
+                     double lacunarity = 2.0, double scale0 = 0.5)
+            : m_seed(seed), m_nTheta(nTheta), m_nPhi(nPhi),
+              m_octaves(octaves), m_initial_freq(initial_freq),
+              m_lacunarity(lacunarity), m_scale0(scale0) {
+            
+            std::mt19937 rng(m_seed);
+            double freq = m_initial_freq;
+            
+            for (int i = 0; i < m_octaves; i++) {
+                // Generate unique seed for each octave from main seed
+                unsigned long octave_seed = rng();
+                // Calculate periods for seamless tiling
+                double periodX = m_nTheta * freq;
+                double periodY = m_nPhi * freq;
+                m_perlins.emplace_back(octave_seed, periodX, periodY);
+                freq *= m_lacunarity;
+            }
+        }
+    
+        double noise(double x, double y) const {
+            double result = 0.0;
+            double amplitude = 1.0;
+            double freq = m_initial_freq;
+    
+            for (const auto& p : m_perlins) {
+                // Transform coordinates for current octave
+                double tx = x * freq + 0.5;
+                double ty = y * freq + 0.5;
+                result += m_scale0 * p.noise(tx, ty) * amplitude;
+                amplitude /= m_lacunarity;
+                freq *= m_lacunarity;
+            }
+            return result;
+        }
+    
+    private:
+        unsigned long m_seed;
+        int m_nTheta;
+        int m_nPhi;
+        int m_octaves;
+        double m_initial_freq;
+        double m_lacunarity;
+        double m_scale0;
+        std::vector<PerlinNoise> m_perlins;
+    };
+
 #endif // PERLIN_HPP
