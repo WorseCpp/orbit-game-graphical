@@ -6,6 +6,7 @@
 #include "common.hpp"
 
 #include "Verts.hpp"
+#include "Memmanage.hpp"
 
 template<HasAttribPointer T>
 class VBO {
@@ -43,7 +44,7 @@ private:
 template<HasAttribPointer T>
 class DynVBO {
 public:
-    DynVBO(int arr_size)
+    DynVBO(int arr_size, int block_size = -1)
     : m_arr_size(arr_size+1)
     {
         glGenBuffers(1, &id);
@@ -51,6 +52,7 @@ public:
         glBufferData(GL_ARRAY_BUFFER, arr_size * sizeof(T), nullptr, GL_DYNAMIC_DRAW);
         T dummy;
         dummy.setAttribPointer(); // Call setAttribPointer to configure the vertex attributes
+        allocator = std::make_shared<BlockAllocator>(arr_size, block_size < 0 ? arr_size : block_size); // Initialize allocator with 0 total indices and block size of 1
     }
 
     ~DynVBO(){ glDeleteBuffers(1, &id); }
@@ -96,6 +98,8 @@ public:
     GLuint getID() const {
         return id;
     }
+
+    std::shared_ptr<BlockAllocator> allocator;
 
 private:
     GLuint id;

@@ -47,14 +47,14 @@ private:
 class DynIBO {
 public:
     // Constructs a dynamic index buffer with allocated space for 'count' indices.
-    DynIBO(unsigned int count, unsigned int block_size = 1)
+    DynIBO(unsigned int count, int block_size = -1)
         : m_Count(count + 1)
     {
         glGenBuffers(1, &m_ID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), nullptr, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-        m_allocator = (std::make_shared<BlockAllocator>(count, block_size)); // Initialize allocator with count and block size of 1
+        allocator = (std::make_shared<BlockAllocator>(count, block_size < 0 ? count : block_size)); // Initialize allocator with count and block size of 1
     }
 
     // Deletes the dynamic index buffer.
@@ -96,10 +96,11 @@ public:
     // Returns the maximum number of indices the buffer can hold.
     unsigned int getCount() const { return m_Count; }
 
+    std::shared_ptr<BlockAllocator> allocator;
+
 private:
     unsigned int m_ID;
     unsigned int m_Count;
-    std::shared_ptr<BlockAllocator> m_allocator;
 };
 
 #endif // IBO_HPP
