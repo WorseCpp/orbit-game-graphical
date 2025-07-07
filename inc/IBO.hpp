@@ -3,8 +3,13 @@
 
 #include "common.hpp"
 
+#include "Memmanage.hpp"
+
 class IBO {
 public:
+
+
+
     // Constructs an index buffer with given indices and their count.
     IBO(const unsigned int* indices, unsigned int count)
         : m_Count(count)
@@ -33,6 +38,7 @@ public:
     // Returns the number of indices.
     unsigned int getCount() const { return m_Count; }
 
+
 private:
     unsigned int m_ID;
     unsigned int m_Count;
@@ -41,13 +47,14 @@ private:
 class DynIBO {
 public:
     // Constructs a dynamic index buffer with allocated space for 'count' indices.
-    DynIBO(unsigned int count)
+    DynIBO(unsigned int count, unsigned int block_size = 1)
         : m_Count(count + 1)
     {
         glGenBuffers(1, &m_ID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ID);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), nullptr, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+        m_allocator = (std::make_shared<BlockAllocator>(count, block_size)); // Initialize allocator with count and block size of 1
     }
 
     // Deletes the dynamic index buffer.
@@ -92,6 +99,7 @@ public:
 private:
     unsigned int m_ID;
     unsigned int m_Count;
+    std::shared_ptr<BlockAllocator> m_allocator;
 };
 
 #endif // IBO_HPP

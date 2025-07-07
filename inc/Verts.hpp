@@ -49,5 +49,18 @@ public:
     P_N_C();
 };
 
+class Model_P_N_C {
+public:
+    void setAttribPointer();
+
+    glm::vec3 pos;
+    glm::vec3 norm;
+    glm::vec3 color;
+    int model_id;
+
+    Model_P_N_C(const glm::vec3& p, const glm::vec3& n, const glm::vec3& c, int model_id);
+    Model_P_N_C();
+};  
+    
 
 #endif // RENDERABLE_VERTICES_H

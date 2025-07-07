@@ -58,5 +58,32 @@ P_N_C::P_N_C(const glm::vec3& p, const glm::vec3& n, const glm::vec3& c)
     color = c;
 }
 
-P_N_C::P_N_C()
+Model_P_N_C::Model_P_N_C()
+{}
+
+void Model_P_N_C::setAttribPointer()
+{
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Model_P_N_C), (const void*)offsetof(Model_P_N_C, pos));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Model_P_N_C), (const void*)offsetof(Model_P_N_C, norm));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Model_P_N_C), (const void*)offsetof(Model_P_N_C, color));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(3, 1, GL_INT, GL_FALSE, sizeof(Model_P_N_C), (const void*)offsetof(Model_P_N_C, model_id));
+    glEnableVertexAttribArray(3);
+}
+
+Model_P_N_C::Model_P_N_C(const glm::vec3& p, const glm::vec3& n, const glm::vec3& c, int model_id)
+    : model_id(model_id)
+{
+    pos = p;
+
+    assert(glm::length(n) > 1e-6);
+
+    norm = glm::normalize(n);
+
+    color = c;
+}
+
+Model_P_N_C::Model_P_N_C()
 {}
