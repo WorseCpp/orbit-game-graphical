@@ -11,10 +11,10 @@ PlanetArray::PlanetArray(size_t inTheta, size_t inPhi, double rad)
     data = std::vector<std::vector<double>>(nTheta, std::vector<double>(nPhi, rad));
 }
 
-void PlanetArray::fractal()
+void PlanetArray::fractal(unsigned long long seed)
 {
 
-    FractalNoise f = FractalNoise(mt_gen(), nTheta, nPhi, 2. / nTheta);
+    FractalNoise f = FractalNoise(seed, nTheta, nPhi, 2. / nTheta);
 
 
     for (size_t i = 0; i < nTheta; i++) {

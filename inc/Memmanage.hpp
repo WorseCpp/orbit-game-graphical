@@ -10,7 +10,7 @@ public:
     BlockAllocator(size_t totalIndices, size_t blockSize)
         : totalIndices_(totalIndices), blockSize_(blockSize)
     {
-        if (blockSize == 0 || totalIndices == 0 || totalIndices % blockSize != 0)
+        if (blockSize == 0 || totalIndices == 0 || totalIndices % blockSize != 0 || blockSize % 3 != 0)
             throw std::invalid_argument("Invalid block size or total indices");
         numBlocks_ = totalIndices_ / blockSize_;
         reset();

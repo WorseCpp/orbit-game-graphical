@@ -6,6 +6,8 @@
 #include "IBO.hpp"
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "ProcGen.hpp"
+
 class BaseSprite
 {
 
@@ -51,22 +53,24 @@ public:
 
         while (m_vbo_blocks.size() * m_vbo->allocator->blockSize() < m_vertices.size()) {
             m_vbo_blocks.push_back(m_vbo->allocator->allocate());
+            // cout << "vbo block allocated: " << m_vbo_blocks.back() << "\n";
         }
 
         while (m_ibo_blocks.size() * m_ibo->allocator->blockSize() < m_indices.size()) {
             m_ibo_blocks.push_back(m_ibo->allocator->allocate());
+            // cout << "ibo block allocated: " << m_ibo_blocks.back() << "\n";
         }
 
-        //for (auto& block : m_vbo_blocks) {
-        //    cout << "vbo block; " << block << "\n";
-        //}
-        //for (auto& block : m_ibo_blocks) {
-        //    cout << "ibo block; " << block << "\n";
-        //}
+        // for (auto& block : m_vbo_blocks) {
+        //     cout << "vbo block; " << block << "\n";
+        // }
+        // for (auto& block : m_ibo_blocks) {
+        //     cout << "ibo block; " << block << "\n";
+        // }
 
         for (int i = 0; i < m_indices.size(); i++) {
             int block = m_indices[i] / m_vbo->allocator->blockSize();
-            m_indices[i] = m_indices[i] + m_vbo_blocks[block];
+            m_indices[i] = (m_indices[i] % m_vbo->allocator->blockSize()) + m_vbo_blocks[block];
         }
 
         for (int i = 0; i < m_vbo_blocks.size(); i++) {
@@ -82,6 +86,11 @@ public:
                 std::min(m_indices.size() - i * m_ibo->allocator->blockSize(), m_ibo->allocator->blockSize()), 
                 block);
         }
+    }
+
+    size_t numIndicies()
+    {
+        return static_cast<size_t>(m_indices.size());
     }
 
     void make_model_mat()
@@ -117,10 +126,15 @@ public:
 
 class Planet : public EntitySprite<P_N_C>
 {
+    unsigned long long m_seed;
+    int m_nTheta;
+    int m_nPhi;
+    double m_rad;
 public:
-    Planet(const glm::vec3& pos, const glm::vec3& euler_angles, std::shared_ptr<DynVBO<P_N_C>> vbo, std::shared_ptr<DynIBO> ibo)
-        : EntitySprite<P_N_C>(pos, euler_angles, vbo, ibo)
+    Planet(const glm::vec3& pos, const glm::vec3& euler_angles, std::shared_ptr<DynVBO<P_N_C>> vbo, std::shared_ptr<DynIBO> ibo, unsigned long long seed, int nTheta = 1024, int nPhi = 1024, double rad = 32.)
+        : EntitySprite<P_N_C>(pos, euler_angles, vbo, ibo), m_seed(seed), m_nTheta(nTheta), m_nPhi(nPhi), m_rad(rad)
     {
+
         mesh();
     }
 
@@ -143,57 +157,17 @@ public:
         
         // The model_P_N_C takes a glm::Vec3 for position, normal, and color
 
-        float size = 1.0f;
-        glm::vec3 positions[8] = {
-            {-size, -size, -size},
-            { size, -size, -size},
-            { size,  size, -size},
-            {-size,  size, -size},
-            {-size, -size,  size},
-            { size, -size,  size},
-            { size,  size,  size},
-            {-size,  size,  size}
-        };
+        auto planet = PlanetArray(m_nTheta, m_nPhi, m_rad);
+    
+        planet.fractal(m_seed);
+    
+        std::tie(m_vertices, m_indices) = planet.mesh<P_N_C>();
 
-        glm::vec3 normals[6] = {
-            { 0,  0, -1}, // back
-            { 0,  0,  1}, // front
-            {-1,  0,  0}, // left
-            { 1,  0,  0}, // right
-            { 0, -1,  0}, // bottom
-            { 0,  1,  0}  // top
-        };
-
-        glm::vec3 color = {0.2f, 0.7f, 0.3f};
-
-        unsigned int face_indices[6][4] = {
-            {0, 1, 2, 3}, // back
-            {4, 5, 6, 7}, // front
-            {0, 3, 7, 4}, // left
-            {1, 5, 6, 2}, // right
-            {0, 1, 5, 4}, // bottom
-            {3, 2, 6, 7}  // top
-        };
-
-        for (int f = 0; f < 6; ++f) {
-            unsigned int i0 = face_indices[f][0];
-            unsigned int i1 = face_indices[f][1];
-            unsigned int i2 = face_indices[f][2];
-            unsigned int i3 = face_indices[f][3];
-
-            m_vertices.push_back(P_N_C(positions[i0], normals[f], color));
-            m_vertices.push_back(P_N_C(positions[i1], normals[f], color));
-            m_vertices.push_back(P_N_C(positions[i2], normals[f], color));
-            m_vertices.push_back(P_N_C(positions[i3], normals[f], color));
-
-            unsigned int base = f * 4;
-            m_indices.push_back(base + 0);
-            m_indices.push_back(base + 1);
-            m_indices.push_back(base + 2);
-            m_indices.push_back(base + 2);
-            m_indices.push_back(base + 3);
-            m_indices.push_back(base + 0);
+        for (auto& v : m_vertices) {
+            v.pos += m_pos; // Offset the vertices by the planet's position
         }
+
+        std::cout << m_vertices.size() << " vertices, " << m_indices.size() << " indices\n";
     }
 };
 #endif

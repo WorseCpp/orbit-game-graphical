@@ -25,10 +25,11 @@ using std::make_shared;
 using std::cout;
 using std::endl;
 
+constexpr bool DEBUG = false;
 
-constexpr bool DEBUG_IBO = true; //false;
+constexpr bool DEBUG_IBO = false || DEBUG;
 
-constexpr bool DEBUG_VBO = true; //false;
+constexpr bool DEBUG_VBO = false || DEBUG;
 
 
 #endif

@@ -21,7 +21,7 @@ public:
     template <HasAttribPointer T>
     std::pair<std::vector<T>, std::vector<unsigned int>> mesh();
 
-    void fractal();
+    void fractal(unsigned long long seed);
 
 private:
     size_t nTheta, nPhi;

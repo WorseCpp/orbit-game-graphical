@@ -72,17 +72,6 @@ int main() {
 
 
 
-    // Vertex data using std::vector
-    std::vector<P_N_C> vertices;
-
-    std::vector<unsigned int> indices;
-
-    auto planet = PlanetArray(1024, 1024, 32.);
-    
-    planet.fractal();
-
-    std::tie(vertices, indices) = planet.mesh<P_N_C>();
-
 
     
     std::shared_ptr<Camera> camera = std::make_shared<Camera>(glm::vec3(32.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -180.0f, 0.0f);
@@ -93,43 +82,20 @@ int main() {
     VAO vao;
     vao.bind();
 
-    DynVBO<P_N_C> dyn_vbo = DynVBO<P_N_C>(vertices.size() * 2, vertices.size());
+    DynVBO<P_N_C> dyn_vbo = DynVBO<P_N_C>(3e6, 3e5);
 
     // DynIBO creation and data loading
-    DynIBO dyn_ibo(indices.size() * 2, indices.size());
-
-    dyn_ibo.bind();
-    dyn_vbo.bind();
-
-
-
+    DynIBO dyn_ibo(3e7 * 5, 3e6);
 
     //std::cout << "gonna make a planet" << std::endl;
-    Planet p = Planet(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), std::make_shared<DynVBO<P_N_C>>(dyn_vbo), std::make_shared<DynIBO>(dyn_ibo));
+    Planet planet = Planet(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), std::make_shared<DynVBO<P_N_C>>(dyn_vbo), std::make_shared<DynIBO>(dyn_ibo), 
+            mt_gen());
     //std::cout << "made a planet" << std::endl;
-    dyn_ibo.allocator->print();
-    dyn_vbo.allocator->print();
-    p.ship();
+    planet.ship();
 
-
-    auto ibo_idx = dyn_ibo.allocator->allocate();
-    auto vbo_idx = dyn_vbo.allocator->allocate();
-
-    
-    dyn_vbo.bind();
-    dyn_vbo.loadData(vertices, vbo_idx);
-
-    
-    dyn_ibo.bind();
-    
-    for (auto& index : indices)
-    {
-        index += vbo_idx; // Adjust indices to match the VBO offset
-    }
-
-    
-    dyn_ibo.loadData(indices, ibo_idx);
-
+    Planet planet2 = Planet(glm::vec3(100.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), std::make_shared<DynVBO<P_N_C>>(dyn_vbo), std::make_shared<DynIBO>(dyn_ibo), 
+            mt_gen());
+    planet2.ship();
 
 
     Texture earth_texture("./8081_earthmap10k.jpg");
@@ -192,14 +158,11 @@ int main() {
         // Example: Draw using glMultiDrawElements for multiple blocks
         // Suppose you have arrays of counts and offsets for each block
         // Replace these with your actual data
-        std::vector<GLsizei> counts = { static_cast<GLsizei>(indices.size()) }; // Number of indices per block
-        std::vector<void*> offsets = { (void*)(ibo_idx * sizeof(unsigned int)) }; // Offset for each block (nullptr for start)
+        std::vector<GLsizei> counts ;// = {planet.numIndicies()}; // Number of indices per block
+        std::vector<void*> offsets  ;//=  {nullptr}; // Offset for each block (nullptr for start)
         
-        p.addDrawCallData(counts, offsets);
-
-        for (int i = 0; i < counts.size(); ++i) {
-            std::cout << "Block " << i << ": Count = " << counts[i] << ", Offset = " << (unsigned long long) offsets[i] / sizeof(GLsizei) << std::endl;
-        }
+        planet.addDrawCallData(counts, offsets);
+        planet2.addDrawCallData(counts, offsets);
 
         // Draw multiple blocks (here only one block as example)
         glMultiDrawElements(GL_TRIANGLES, counts.data(), GL_UNSIGNED_INT, offsets.data(), counts.size());
