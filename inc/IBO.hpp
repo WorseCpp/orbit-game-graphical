@@ -55,6 +55,11 @@ public:
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(unsigned int), nullptr, GL_DYNAMIC_DRAW);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
         allocator = (std::make_shared<BlockAllocator>(count, block_size < 0 ? count : block_size)); // Initialize allocator with count and block size of 1
+
+        if constexpr (DEBUG_IBO)
+        {
+            std::cout << "DynIBO created with ID: " << m_ID << ", Count: " << m_Count << ", Block Size: " << allocator->blockSize() << std::endl;
+        }
     }
 
     // Deletes the dynamic index buffer.
@@ -74,6 +79,12 @@ public:
 
     // Updates the dynamic index buffer with new data starting at an optional offset.
     void loadData(const unsigned int* indices, unsigned int count, unsigned int offset = 0) {
+
+        if constexpr (DEBUG_IBO)
+        {
+            std::cout << "Loading data into DynIBO with ID: " << m_ID << ", Count: " << m_Count << ", Data Size: " << count << ", Offset: " << offset << std::endl;
+        }
+
         bind();
         glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, offset * sizeof(unsigned int), count * sizeof(unsigned int), indices);
         unbind();
@@ -86,6 +97,12 @@ public:
         }
         if (data.size() >= m_Count) {
             std::cerr << "Error: Data size exceeds VBO capacity." << std::endl;
+            return;
+        }
+
+        if (data.size() + idx > m_Count)
+        {
+            std::cerr << "Error: Data size plus offset exceeds VBO capacity." << std::endl;
             return;
         }
         

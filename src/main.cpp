@@ -20,6 +20,8 @@
 
 #include "ProcGen.hpp"
 
+#include "Sprite.hpp"
+
 // VAO class
 class VAO {
 public:
@@ -69,6 +71,7 @@ int main() {
     //282 463
 
 
+
     // Vertex data using std::vector
     std::vector<P_N_C> vertices;
 
@@ -80,6 +83,8 @@ int main() {
 
     std::tie(vertices, indices) = planet.mesh<P_N_C>();
 
+
+    
     std::shared_ptr<Camera> camera = std::make_shared<Camera>(glm::vec3(32.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -180.0f, 0.0f);
 
     InputHandler inputHandler(camera);
@@ -88,17 +93,47 @@ int main() {
     VAO vao;
     vao.bind();
 
-    DynVBO<P_N_C> dyn_vbo = DynVBO<P_N_C>(vertices.size());
-
-    dyn_vbo.bind();
-    dyn_vbo.loadData(vertices);
-    vao.unbind();
+    DynVBO<P_N_C> dyn_vbo = DynVBO<P_N_C>(vertices.size() * 2, vertices.size());
 
     // DynIBO creation and data loading
-    DynIBO dyn_ibo(indices.size());
+    DynIBO dyn_ibo(indices.size() * 2, indices.size());
+
     dyn_ibo.bind();
-    dyn_ibo.loadData(indices);
-    dyn_ibo.unbind();
+    dyn_vbo.bind();
+
+
+
+
+    //std::cout << "gonna make a planet" << std::endl;
+    Planet p = Planet(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), std::make_shared<DynVBO<P_N_C>>(dyn_vbo), std::make_shared<DynIBO>(dyn_ibo));
+    //std::cout << "made a planet" << std::endl;
+    dyn_ibo.allocator->print();
+    dyn_vbo.allocator->print();
+    p.ship();
+
+
+    auto ibo_idx = dyn_ibo.allocator->allocate();
+    auto vbo_idx = dyn_vbo.allocator->allocate();
+
+    
+    dyn_vbo.bind();
+    dyn_vbo.loadData(vertices, vbo_idx);
+
+    
+    dyn_ibo.bind();
+    
+    for (auto& index : indices)
+    {
+        index += vbo_idx; // Adjust indices to match the VBO offset
+    }
+
+    
+    dyn_ibo.loadData(indices, ibo_idx);
+
+
+
+    Texture earth_texture("./8081_earthmap10k.jpg");
+    earth_texture.bind();
 
     Shader simple_shad = Shader("./shad/PNC_simple");
     
@@ -106,6 +141,7 @@ int main() {
 
     //Texture earth_texture("./8081_earthmap10k.jpg");
     
+
    
 
     // Set the input handler as the user pointer for the window
@@ -153,8 +189,20 @@ int main() {
         dyn_vbo.bind();
         dyn_ibo.bind();
 
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+        // Example: Draw using glMultiDrawElements for multiple blocks
+        // Suppose you have arrays of counts and offsets for each block
+        // Replace these with your actual data
+        std::vector<GLsizei> counts = { static_cast<GLsizei>(indices.size()) }; // Number of indices per block
+        std::vector<void*> offsets = { (void*)(ibo_idx * sizeof(unsigned int)) }; // Offset for each block (nullptr for start)
+        
+        p.addDrawCallData(counts, offsets);
 
+        for (int i = 0; i < counts.size(); ++i) {
+            std::cout << "Block " << i << ": Count = " << counts[i] << ", Offset = " << (unsigned long long) offsets[i] / sizeof(GLsizei) << std::endl;
+        }
+
+        // Draw multiple blocks (here only one block as example)
+        glMultiDrawElements(GL_TRIANGLES, counts.data(), GL_UNSIGNED_INT, offsets.data(), counts.size());
         glfwSwapBuffers(window);
         glfwPollEvents();
 

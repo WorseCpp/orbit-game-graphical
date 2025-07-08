@@ -53,6 +53,11 @@ public:
         T dummy;
         dummy.setAttribPointer(); // Call setAttribPointer to configure the vertex attributes
         allocator = std::make_shared<BlockAllocator>(arr_size, block_size < 0 ? arr_size : block_size); // Initialize allocator with 0 total indices and block size of 1
+    
+        
+        if constexpr (DEBUG_VBO) {
+            std::cout << "DynVBO created with ID: " << id << ", Array Size: " << m_arr_size << ", Block Size: " << (block_size < 0 ? arr_size : block_size) << std::endl;
+        }
     }
 
     ~DynVBO(){ glDeleteBuffers(1, &id); }
@@ -66,7 +71,6 @@ public:
             std::cerr << "Error: Data size exceeds VBO capacity." << std::endl;
             return;
         }
-        
         
         loadData(data.data(), data.size(), idx);
     }
@@ -82,6 +86,11 @@ public:
         if (idx + arr_size < 0 || idx + arr_size >= m_arr_size) {
             std::cerr << "Data exceeds buffer size: " << idx + arr_size << " for array size: " << m_arr_size << std::endl;
             return;
+        }
+
+
+        if constexpr (DEBUG_VBO) {
+            std::cout << "Loading data into DynVBO " << id << " at index: " << idx << ", size: " << arr_size << std::endl;
         }
 
         glBufferSubData(GL_ARRAY_BUFFER, idx * sizeof(T), arr_size * sizeof(T), data);

@@ -58,7 +58,7 @@ P_N_C::P_N_C(const glm::vec3& p, const glm::vec3& n, const glm::vec3& c)
     color = c;
 }
 
-Model_P_N_C::Model_P_N_C()
+P_N_C::P_N_C()
 {}
 
 void Model_P_N_C::setAttribPointer()

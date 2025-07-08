@@ -1,5 +1,5 @@
 #ifndef MEMMANAGE_VERTS_HPP
-#define MemManage
+#define MEMMANAGE_VERTS_HPP
 
 #include <vector>
 #include <stack>
@@ -13,10 +13,7 @@ public:
         if (blockSize == 0 || totalIndices == 0 || totalIndices % blockSize != 0)
             throw std::invalid_argument("Invalid block size or total indices");
         numBlocks_ = totalIndices_ / blockSize_;
-        freeBlocks_.reserve(numBlocks_);
-        for (size_t i = 0; i < numBlocks_; ++i) {
-            freeBlocks_.push_back(i);
-        }
+        reset();
     }
 
     // Allocates a block and returns the starting index, or throws if none available
@@ -48,6 +45,15 @@ public:
         for (size_t i = 0; i < numBlocks_; ++i) {
             freeBlocks_.push_back(i);
         }
+    }
+
+    void print()
+    {
+        std::cout << "Free blocks: ";
+        for (const auto& block : freeBlocks_) {
+            std::cout << block * blockSize() << " ";
+        }
+        std::cout << std::endl;
     }
 
 private:
